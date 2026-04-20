@@ -4,7 +4,7 @@ import time
 from loguru import logger
 
 from modules.auto_post import post_tweet
-from modules.auto_reply import reply_to_mentions, reply_to_keyword_tweets
+from modules.auto_reply import reply_to_mentions, reply_to_keyword_tweets, reply_to_job_seekers
 from modules.auto_follow import follow_by_keyword, follow_back_followers
 from modules.auto_unfollow import unfollow_non_followers
 from modules.auto_like import like_by_keyword, like_followers_tweets
@@ -31,6 +31,10 @@ def setup_schedules() -> None:
     # ── キーワード返信：2時間ごと ──────────────────────────────
     schedule.every(2).hours.do(reply_to_keyword_tweets)
     logger.info("[スケジュール] キーワード返信: 2時間ごと")
+
+    # ── Indeed求人誘導返信：1時間ごと ─────────────────────────
+    schedule.every(1).hours.do(reply_to_job_seekers)
+    logger.info("[スケジュール] Indeed求人誘導返信: 1時間ごと")
 
     # ── キーワードフォロー：1時間ごと ─────────────────────────
     schedule.every(1).hours.do(follow_by_keyword)
@@ -72,6 +76,7 @@ def run() -> None:
     # 起動直後に即時実行
     post_tweet()
     reply_to_mentions()
+    reply_to_job_seekers()
     follow_by_keyword()
     follow_back_followers()
     like_by_keyword()

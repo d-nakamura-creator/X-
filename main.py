@@ -56,6 +56,10 @@ def _run_single_command(cmd: str) -> None:
             from modules.auto_reply import reply_to_keyword_tweets
             reply_to_keyword_tweets()
 
+        case "reply-indeed":
+            from modules.auto_reply import reply_to_job_seekers
+            reply_to_job_seekers()
+
         case "follow":
             from modules.auto_follow import follow_by_keyword
             follow_by_keyword()
@@ -96,6 +100,7 @@ X自動化システム
   python main.py post [テキスト]   # ツイート投稿
   python main.py reply-mentions    # メンション返信
   python main.py reply-keywords    # キーワード返信
+  python main.py reply-indeed      # Indeed求人誘導返信
   python main.py follow            # キーワードフォロー
   python main.py follow-back       # フォローバック
   python main.py unfollow          # アンフォロー

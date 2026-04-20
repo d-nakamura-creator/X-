@@ -7,6 +7,57 @@ from modules import state as st
 import config
 
 
+def reply_to_job_seekers() -> None:
+    """求職関連キーワードのツイートを検索し、Indeed求人URLを案内する。"""
+    state = st.load()
+    state = st.reset_daily_if_needed(state)
+
+    if not st.under_limit(state, "replies", config.REPLY_DAILY_LIMIT):
+        logger.warning("[Indeed返信] 本日の返信上限に達しました")
+        return
+
+    client = get_client()
+    replied = set(state.get("replied_tweet_ids", []))
+
+    for keyword in config.INDEED_KEYWORDS:
+        if not st.under_limit(state, "replies", config.REPLY_DAILY_LIMIT):
+            break
+        try:
+            results = client.search_recent_tweets(
+                query=f"{keyword} lang:ja -is:retweet -is:reply",
+                max_results=config.SEARCH_MAX_RESULTS,
+                tweet_fields=["author_id"],
+            )
+            if not results.data:
+                continue
+
+            for tweet in results.data:
+                if str(tweet.id) in replied:
+                    continue
+                if str(tweet.author_id) == str(config.MY_USER_ID):
+                    continue
+                if not st.under_limit(state, "replies", config.REPLY_DAILY_LIMIT):
+                    break
+
+                template = random.choice(config.INDEED_REPLY_TEMPLATES)
+                reply_text = template.format(url=config.INDEED_JOB_URL)
+                try:
+                    client.create_tweet(
+                        text=reply_text,
+                        in_reply_to_tweet_id=tweet.id,
+                    )
+                    replied.add(str(tweet.id))
+                    state["replied_tweet_ids"] = list(replied)
+                    state = st.increment(state, "replies")
+                    logger.success(f"[Indeed返信] 完了: keyword='{keyword}' tweet_id={tweet.id}")
+                    time.sleep(config.ACTION_INTERVAL)
+                except Exception as e:
+                    logger.error(f"[Indeed返信] 失敗 tweet_id={tweet.id}: {e}")
+
+        except Exception as e:
+            logger.error(f"[Indeed返信] 検索失敗 keyword='{keyword}': {e}")
+
+
 def reply_to_mentions() -> None:
     """未返信のメンションに自動返信する。"""
     state = st.load()
