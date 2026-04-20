@@ -1,6 +1,5 @@
 """Indeed求人自動最適化 エントリーポイント。"""
 import sys
-import json
 import schedule
 import time
 from loguru import logger
@@ -78,31 +77,29 @@ def main() -> None:
 
     cmd = sys.argv[1] if len(sys.argv) > 1 else "scheduler"
 
-    match cmd:
-        case "optimize":
-            cmd_optimize()
-        case "dry-run":
-            cmd_optimize(dry_run=True)
-        case "analytics":
-            cmd_analytics()
-        case "scheduler":
-            cmd_scheduler()
-        case _:
-            print("""
+    if cmd == "optimize":
+        cmd_optimize()
+    elif cmd == "dry-run":
+        cmd_optimize(dry_run=True)
+    elif cmd == "analytics":
+        cmd_analytics()
+    elif cmd == "scheduler":
+        cmd_scheduler()
+    else:
+        print("""
 Indeed求人自動最適化ツール
 
 使い方:
-  python indeed_main.py               # スケジューラー起動（09:00/18:00に自動実行）
-  python indeed_main.py optimize      # 今すぐ最適化を実行
-  python indeed_main.py dry-run       # 変更内容の確認のみ（実際の更新なし）
-  python indeed_main.py analytics     # アナリティクスデータの表示のみ
+  python3 indeed_main.py               # スケジューラー起動（09:00/18:00に自動実行）
+  python3 indeed_main.py optimize      # 今すぐ最適化を実行
+  python3 indeed_main.py dry-run       # 変更内容の確認のみ（実際の更新なし）
+  python3 indeed_main.py analytics     # アナリティクスデータの表示のみ
 
 事前準備（.envに追記）:
   INDEED_EMAIL=your@email.com
   INDEED_PASSWORD=yourpassword
-  INDEED_JOB_URL=https://jp.indeed.com/jobs?q=...  # 任意
-  INDEED_ANALYTICS_DAYS=7                           # 参照期間（7/14/30日）
-  INDEED_HEADLESS=true                              # false にするとブラウザが表示される
+  INDEED_ANALYTICS_DAYS=7   # 参照期間（7/14/30日）
+  INDEED_HEADLESS=false      # false にするとブラウザが表示される
 """)
 
 
