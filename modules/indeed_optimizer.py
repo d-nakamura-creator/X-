@@ -299,9 +299,12 @@ def run_optimization(dry_run: bool = False) -> dict:
     Indeedにログイン → アナリティクス取得 → 求人説明文を自動最適化する。
     dry_run=True の場合は実際の更新をスキップして結果のみ返す。
     """
-    if not config.INDEED_EMAIL or not config.INDEED_PASSWORD:
-        logger.error("[Indeed] INDEED_EMAIL / INDEED_PASSWORD が未設定です（.envを確認）")
-        return {}
+    # 手動ログインモード以外はEMAIL/PASSWORDが必須
+    if config.INDEED_LOGIN_MODE != "manual":
+        if not config.INDEED_EMAIL or not config.INDEED_PASSWORD:
+            logger.error("[Indeed] INDEED_EMAIL / INDEED_PASSWORD が未設定です（.envを確認）")
+            logger.error("Googleログイン等の場合は .env に INDEED_LOGIN_MODE=manual を追加してください")
+            return {}
 
     result: dict = {"updated": [], "skipped": [], "analytics": []}
 
