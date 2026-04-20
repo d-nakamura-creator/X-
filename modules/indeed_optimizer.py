@@ -27,6 +27,11 @@ def _login(page: Page) -> bool:
         page.goto(_LOGIN_URL, wait_until="domcontentloaded", timeout=30000)
         time.sleep(2)
 
+        # 手動ログインモードが指定されている場合はすぐ手動ログインへ
+        if config.INDEED_LOGIN_MODE == "manual":
+            logger.info("[Indeed] 手動ログインモードで起動中")
+            return _wait_manual_login(page)
+
         # ── ステップ1: メールアドレス入力 ──────────────────────
         email_input = page.wait_for_selector(
             'input[type="email"], input[name="__email"], input[id*="email"]',

@@ -38,6 +38,9 @@ INDEED_ANALYTICS_DAYS = int(os.getenv("INDEED_ANALYTICS_DAYS", "7"))
 # ── Playwright: ヘッドレスモード（True=バックグラウンド実行） ─────────────
 INDEED_HEADLESS = os.getenv("INDEED_HEADLESS", "true").lower() == "true"
 
+# ── ログイン方式: "manual" = 手動ログイン（Google・2段階認証対応） ─────
+INDEED_LOGIN_MODE = os.getenv("INDEED_LOGIN_MODE", "auto").lower()
+
 # ── 求職者検出キーワード（Indeed 誘導リプライのトリガー） ─────────────────
 INDEED_KEYWORDS = [
     "転職したい",
