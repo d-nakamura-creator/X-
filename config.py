@@ -25,8 +25,18 @@ TARGET_KEYWORDS = [
     "キャリアアップ",
 ]
 
+# ── Indeed 雇用主アカウント認証情報 ───────────────────────────────────
+INDEED_EMAIL    = os.getenv("INDEED_EMAIL", "")
+INDEED_PASSWORD = os.getenv("INDEED_PASSWORD", "")
+
 # ── Indeed 求人 URL（.env で上書き可能） ──────────────────────────────
 INDEED_JOB_URL = os.getenv("INDEED_JOB_URL", "https://jp.indeed.com")
+
+# ── Indeed アナリティクス最適化：何日間のデータを参照するか ──────────────
+INDEED_ANALYTICS_DAYS = int(os.getenv("INDEED_ANALYTICS_DAYS", "7"))
+
+# ── Playwright: ヘッドレスモード（True=バックグラウンド実行） ─────────────
+INDEED_HEADLESS = os.getenv("INDEED_HEADLESS", "true").lower() == "true"
 
 # ── 求職者検出キーワード（Indeed 誘導リプライのトリガー） ─────────────────
 INDEED_KEYWORDS = [
