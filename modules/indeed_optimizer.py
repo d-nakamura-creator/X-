@@ -27,10 +27,53 @@ def _login(page: Page) -> bool:
         page.goto(_LOGIN_URL, wait_until="domcontentloaded", timeout=30000)
         time.sleep(2)
 
-        # 手動ログインモードが指定されている場合はすぐ手動ログインへ
+        # 手動ログインモードはすぐ手動へ
         if config.INDEED_LOGIN_MODE == "manual":
             logger.info("[Indeed] 手動ログインモードで起動中")
             return _wait_manual_login(page)
+
+        # ── ステップ1: メールアドレス入力 ──────────────────────
+        email_input = page.wait_for_selector(
+            'input[type="email"], input[name="__email"]',
+            timeout=10000,
+        )
+        email_input.fill(config.INDEED_EMAIL)
+        page.click('button:has-text("続ける"), button[type="submit"]', timeout=5000)
+        time.sleep(2)
+
+        # ── ステップ2:「パスワードを使ってログインする」リンクをクリック ──
+        try:
+            page.click('a:has-text("パスワードを使ってログインする")', timeout=8000)
+            time.sleep(2)
+        except Exception:
+            pass  # すでにパスワード画面なら不要
+
+        # ── ステップ3: パスワード入力 ────────────────────────────
+        password_input = page.wait_for_selector(
+            'input[type="password"], input[name="__password"]',
+            timeout=10000,
+        )
+        password_input.fill(config.INDEED_PASSWORD)
+        time.sleep(3)  # Cloudflare確認の完了を待つ
+
+        # ── ステップ4: ログインボタン ─────────────────────────────
+        page.click(
+            'button:has-text("ログイン"), button[type="submit"]',
+            timeout=5000,
+        )
+
+        # ── ログイン完了まで待機 ─────────────────────────────
+        try:
+            page.wait_for_url("**/employers.indeed.com/**", timeout=25000)
+            logger.success("[Indeed] 自動ログイン成功")
+            return True
+        except PWTimeout:
+            logger.warning("[Indeed] ログイン後の画面遷移タイムアウト（Cloudflare等の可能性）")
+            return _wait_manual_login(page)
+
+    except Exception as e:
+        logger.warning(f"[Indeed] 自動ログインに失敗: {e}")
+        return _wait_manual_login(page)
 
         # ── ステップ1: メールアドレス入力 ──────────────────────
         email_input = page.wait_for_selector(

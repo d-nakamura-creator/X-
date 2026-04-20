@@ -15,11 +15,16 @@ logger.add("data/indeed.log", rotation="10 MB", retention="14 days", level="DEBU
 
 def _check_config() -> bool:
     import config
-    if not config.INDEED_EMAIL or not config.INDEED_PASSWORD:
-        logger.error("INDEED_EMAIL / INDEED_PASSWORD が未設定です")
-        logger.error(".env ファイルに以下を追記してください:")
-        logger.error("  INDEED_EMAIL=your@email.com")
-        logger.error("  INDEED_PASSWORD=yourpassword")
+    # 手動ログインモードはメール不要
+    if config.INDEED_LOGIN_MODE == "manual":
+        return True
+    if not config.INDEED_EMAIL:
+        logger.error("INDEED_EMAIL が未設定です（.envを確認）")
+        return False
+    if not config.INDEED_PASSWORD:
+        logger.error("INDEED_PASSWORD が未設定です（.envを確認）")
+        logger.error("パスワードを使わずGoogleログインの場合は .env に以下を追加：")
+        logger.error("  INDEED_LOGIN_MODE=manual")
         return False
     return True
 
