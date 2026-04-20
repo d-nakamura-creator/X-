@@ -22,20 +22,71 @@ class JobAnalytics:
 
 
 def _login(page: Page) -> bool:
-    """Indeedにログインする。成功でTrue。"""
+    """Indeedにログインする。自動で失敗したら手動ログインを待機する。"""
     try:
         page.goto(_LOGIN_URL, wait_until="domcontentloaded", timeout=30000)
-        page.fill('input[name="__email"]', config.INDEED_EMAIL)
-        page.fill('input[name="__password"]', config.INDEED_PASSWORD)
-        page.click('button[type="submit"]')
-        page.wait_for_url("**/employers.indeed.com/**", timeout=20000)
-        logger.success("[Indeed] ログイン成功")
-        return True
-    except PWTimeout:
-        logger.error("[Indeed] ログインタイムアウト - 認証情報を確認してください")
-        return False
+        time.sleep(2)
+
+        # ── ステップ1: メールアドレス入力 ──────────────────────
+        email_input = page.wait_for_selector(
+            'input[type="email"], input[name="__email"], input[id*="email"]',
+            timeout=10000,
+        )
+        email_input.fill(config.INDEED_EMAIL)
+        time.sleep(0.5)
+
+        # 「続行」「Continue」ボタンをクリック
+        page.click(
+            'button[type="submit"], button:has-text("続行"), button:has-text("Continue")',
+            timeout=5000,
+        )
+        time.sleep(3)
+
+        # ── ステップ2: パスワード入力（別ページに遷移） ──────
+        try:
+            password_input = page.wait_for_selector(
+                'input[type="password"], input[name="__password"]',
+                timeout=10000,
+            )
+            password_input.fill(config.INDEED_PASSWORD)
+            time.sleep(0.5)
+            page.click(
+                'button[type="submit"], button:has-text("サインイン"), button:has-text("Sign in")',
+                timeout=5000,
+            )
+        except PWTimeout:
+            # パスワード入力欄が出ない = メール認証コードや別の認証方式
+            logger.warning("[Indeed] パスワード入力欄が見つかりません（2段階認証かも）")
+            return _wait_manual_login(page)
+
+        # ── ログイン完了まで待機 ─────────────────────────────
+        try:
+            page.wait_for_url("**/employers.indeed.com/**", timeout=20000)
+            logger.success("[Indeed] 自動ログイン成功")
+            return True
+        except PWTimeout:
+            logger.warning("[Indeed] ログイン後の画面遷移待機タイムアウト")
+            return _wait_manual_login(page)
+
     except Exception as e:
-        logger.error(f"[Indeed] ログイン失敗: {e}")
+        logger.warning(f"[Indeed] 自動ログインに失敗: {e}")
+        return _wait_manual_login(page)
+
+
+def _wait_manual_login(page: Page) -> bool:
+    """自動ログイン失敗時：ブラウザで手動ログインしてもらう。"""
+    print("\n" + "=" * 60)
+    print(" 自動ログインに失敗しました。")
+    print(" ブラウザの画面でご自身でログインしてください。")
+    print(" （CAPTCHA・2段階認証などもブラウザで完了させてください）")
+    print(" ")
+    print(" ログインが完了したら、ここで Enter キーを押してください ▶")
+    print("=" * 60)
+    try:
+        input()
+        logger.info("[Indeed] 手動ログインを受付けました。処理を続行します。")
+        return True
+    except Exception:
         return False
 
 
